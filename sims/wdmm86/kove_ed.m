@@ -17,7 +17,7 @@ K.hiddenFeats = 0;
 K.q = 1;
 K.r = 1;
 K.c = 3;	% @@@ override this
-K.exemplarDistortion = true;
+%K.exemplarDistortion = true;
 
 if wD,
     % distortion matrix has 1 on diagonal, and wD off diagonal, indicating

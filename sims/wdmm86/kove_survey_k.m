@@ -1,16 +1,28 @@
 function kove_survey_k
 % KOVE_SURVEY_K Given fixed parameters for lr, c, and phi, survey the prior
-% knowledge parameter for each of the KOVE models.
+% knowledge parameter for each of the KOVE models. Output goes to a file.
 
 path('../..', path);
 
-lr = .03;
-c = .75;
-phi = 1.5;
+% best for distorted (non-veridical) exemplars
+%lr = .03;
+%c = .75;
+%phi = 1.5;
+% best found for veridical exemplars
+lr = .0264;
+c = .5517;
+phi = 1.621;
 
 reps = 5;
 
-for wK = 0:1:50,
+outfilename = 'kove_survey_k.dat';
+
+outfile = fopen(outfilename, 'w');
+
+% header
+fprintf(outfile, 'Model\tp\tLS\tNLS\n');
+
+for wK = 0:.5:25,
     config = kove_ei(wK);
     config.lambdaW = lr;
     config.c = c;
@@ -18,7 +30,7 @@ for wK = 0:1:50,
     
     trainErrs = kove_run(config, reps);
     
-    fprintf(1, 'EI %0.2f %0.2f %0.2f\n', wK, sum(trainErrs(1,:)), sum(trainErrs(2,:)));
+    fprintf(outfile, 'EI\t%0.3f\t%0.3f\t%0.3f\n', wK, sum(trainErrs(1,:)), sum(trainErrs(2,:)));
 end
 
 for wD = 0:.02:1,
@@ -29,7 +41,7 @@ for wD = 0:.02:1,
     
     trainErrs = kove_run(config, reps);
     
-    fprintf(1, 'ED %0.2f %0.2f %0.2f\n', wD, sum(trainErrs(1,:)), sum(trainErrs(2,:)));
+    fprintf(outfile, 'ED\t%0.3f\t%0.3f\t%0.3f\n', wD, sum(trainErrs(1,:)), sum(trainErrs(2,:)));
 end
 
 for wD = 0:.02:1,
@@ -40,7 +52,7 @@ for wD = 0:.02:1,
     
     trainErrs = kove_run(config, reps);
     
-    fprintf(1, 'PD %0.2f %0.2f %0.2f\n', wD, sum(trainErrs(1,:)), sum(trainErrs(2,:)));
+    fprintf(outfile, 'PD\t%0.3f\t%0.3f\t%0.3f\n', wD, sum(trainErrs(1,:)), sum(trainErrs(2,:)));
 end
 
 for wW = -5:.5:20,
@@ -51,7 +63,8 @@ for wW = -5:.5:20,
     
     trainErrs = kove_run(config, reps);
     
-    fprintf(1, 'EW %0.2f %0.2f %0.2f\n', wW, sum(trainErrs(1,:)), sum(trainErrs(2,:)));
+    fprintf(outfile, 'EW\t%0.3f\t%0.3f\t%0.3f\n', wW, sum(trainErrs(1,:)), sum(trainErrs(2,:)));
 end
 
+	fclose(outfile);
 end
