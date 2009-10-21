@@ -3,6 +3,9 @@
 # Author: Harlan
 ###############################################################################
 
+# load C code library
+dyn.load("kresConverge.so")
+
 setClass("kres",
     representation(nodeTree="list", nodes="character", cons="matrix",
         w="matrix", wChl="matrix", wExemp="matrix",
@@ -142,50 +145,23 @@ setMethod("initialize", "kres", function(.Object, nodeTree, params) {
 setGeneric("converge", function(.K, Xin, params) standardGeneric("converge"))
 
 setMethod("converge", "kres", function(.K, Xin, params) {
-      harmony <- 0
-      dHarmony <- 1
-      
-      # net_input starts out as a vector of 0s
-      net_input <- Xin * 0
-      adj_input <- Xin * 0
-      
-      cycles <- 0
-      
-      # bleah, need accessors
-      # do this out of the loop for speed, maybe
-      gain <- params$gain
-      alpha <- params$alpha
-      bias <- .K@bias
-      w <- .K@w
-      
-      
-      # while harmony is high and we haven't done a ridiculous number of cycles
-      while ((dHarmony > 0.00001) && (cycles < 1000000))
-      { 
-        # calculate total_input
-        total_input <- net_input + Xin + t(bias)
-      
-        # do gain thing
-        adj_input <- adj_input + (total_input - adj_input) / gain; 
-      
-        # calculate activation
-        act <- 1 / (1 + exp(-alpha * adj_input))
-        
-        # calculate net_input
-#        browser()
-        net_input <- act %*% w
-        
-        # calculate harmony
-        newHarmony <- sum(act * net_input);
-        dHarmony <- abs(harmony - newHarmony);
-        harmony <- newHarmony;
-        
-        cycles <- cycles + 1;
-      }
-          
+
+      # Call C routine to do this quickly
+      # arguments: Xin, w, gain, alpha, bias, numNodes
+      # returns: act, cycles (pre-allocated)
+      # everything should be a vector, not a matrix, I think...
+
+      act <- as.vector(Xin * 0)
+      cycles <- as.integer(0)
+
+      ret <- .C("converge", as.integer(length(Xin)),
+        as.vector(Xin), as.vector(.K@w), as.double(params$gain), 
+        as.double(params$alpha), as.vector(.K@bias), act=act, cycles=cycles)
+
       # return a list with the post-convergence activation and the convergence time in 
       # steps
-      return(list(act=act, cycles=cycles))
+      return(ret[c("act", "cycles")])
+          
     })
 
 
